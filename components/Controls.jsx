@@ -1,4 +1,7 @@
 import { useGame } from '../context/GameContext';
+import AddCoinsModal from './AddCoinsModal';
+import PlayerSwitcher from './PlayerSwitcher';
+import StakeBox from './StakeBox';
 
 function Controls() {
   const {
@@ -7,64 +10,60 @@ function Controls() {
     handleHit,
     handleStick,
     handleNewGame,
-    activePlayer
+    handleOpenCloseAddCoinsModal,
+    activePlayer,
+    playerOne,
+    playerTwo,
+    addCoinsModalOpen
   } = useGame();
 
   const dealerActive = activePlayer === 3;
+
   return (
-    <div className='middle'>
-      <div className='middle-cont'>
-        <div className='tabs'>
-          <input
-            checked={numberOfPlayers === 1}
-            value='1'
-            name='players'
-            id='onePlayer'
-            type='radio'
-            className='input'
-            onChange={handleNumberOfPlayers}
-          ></input>
-          <label htmlFor='onePlayer' className='label'>
-            1 Player
-          </label>
-          <input
-            checked={numberOfPlayers === 2}
-            value='2'
-            name='players'
-            id='twoPlayers'
-            type='radio'
-            className='input'
-            onChange={handleNumberOfPlayers}
-          ></input>
-          <label htmlFor='twoPlayers' className='label'>
-            2 Players
-          </label>
+    <>
+      <div className='middle'>
+        <div className='middle-cont'>
+          <div className='stakebox-cont'>
+            <StakeBox player={playerOne} />
+            <StakeBox player={playerTwo} />
+          </div>
+
+          <PlayerSwitcher
+            playerSelected={numberOfPlayers}
+            setPlayerSelected={handleNumberOfPlayers}
+            displayOne={'1 Player'}
+            displayTwo={'2 Player'}
+          />
+        </div>
+
+        <div className='buttons'>
+          <button
+            disabled={dealerActive || activePlayer === 0}
+            onClick={handleHit}
+            className='btn btn--hit'
+          >
+            Hit
+          </button>
+          <button
+            disabled={dealerActive || activePlayer === 0}
+            onClick={handleStick}
+            className='btn btn--stick'
+          >
+            Stick
+          </button>
+          <button onClick={handleNewGame} className='btn btn--new'>
+            New game
+          </button>
+          <button
+            onClick={handleOpenCloseAddCoinsModal}
+            className='btn btn-add-coins'
+          >
+            Add coins
+          </button>
         </div>
       </div>
-
-      <div className='winner-message win hidden'>
-        <h1 className='winner-message-text'>Player X wins</h1>
-      </div>
-      <div className='buttons'>
-        <button
-          disabled={dealerActive}
-          onClick={handleHit}
-          className='btn btn--hit'
-        >
-          Hit
-        </button>
-        <button
-          disabled={dealerActive}
-          onClick={handleStick}
-          className='btn btn--stick'
-        >
-          Stick
-        </button>
-        <button onClick={handleNewGame} className='btn btn--new'>
-          New game
-        </button>
-      </div>
-    </div>
+      {addCoinsModalOpen === true && <AddCoinsModal />}
+    </>
   );
 }
 

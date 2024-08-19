@@ -8,6 +8,7 @@ function App() {
     <GameProvider>
       <div className='app'>
         <h1 className='title'>Black Jack</h1>
+
         <Dealer />
         <div className='container'>
           <Player playerNumber={1} />

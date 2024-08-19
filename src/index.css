@@ -24,13 +24,17 @@ body {
 .title {
   display: flex;
   justify-content: center;
-  margin-top: 70px;
+  margin-top: 40px;
   margin-bottom: 40px;
 
   font-weight: bold;
   text-decoration: underline;
   text-decoration-thickness: 5px;
   text-underline-offset: 10px;
+}
+
+.inactive {
+  opacity: 0.4;
 }
 
 .dealer-cont {
@@ -70,11 +74,13 @@ body {
 }
 
 .player {
+  display: flex;
+  flex-direction: column;
   border: 2px solid white;
   width: 35%;
   background-color: rgba(172, 172, 172, 0.1);
-  z-index: -2;
   min-width: 184px;
+  min-height: 200px;
 }
 
 .player-text {
@@ -86,16 +92,38 @@ body {
 }
 .current-div {
   display: flex;
-  gap: 20px;
+  gap: 35px;
   justify-content: space-between;
+  margin-bottom: 10px;
+  height: 25px;
+  border-bottom: 2px white solid;
 }
 
 .total-div {
   display: flex;
-  gap: 10px;
   justify-content: space-between;
   margin-bottom: 10px;
+  height: 25px;
+  border-bottom: 2px white solid;
 }
+
+.coins-div {
+  text-align: center;
+  line-height: 22px;
+  margin-bottom: 10px;
+}
+
+.coins-img {
+  width: 60px;
+}
+
+.coins-img:first-child {
+  margin-left: 15px;
+}
+.coins-img:last-child {
+  margin-right: 15px;
+}
+
 .dealer--card {
   width: 100px;
   margin: 2px;
@@ -107,11 +135,44 @@ body {
 }
 
 .name {
+  margin-bottom: 27px;
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-thickness: 4px;
+  text-underline-offset: 10px;
+}
+.stakebox-cont {
+  display: flex;
+  width: 100%;
+  gap: 10px;
   margin-bottom: 20px;
 }
+.stakebox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 115px;
+  border: 2px solid rgb(255, 247, 0);
+  border-radius: 10px;
+  min-width: 124px;
+}
 
+.stakebox.has-coins {
+  justify-content: center;
+  flex-direction: column;
+}
+
+.stake-amount {
+  margin-bottom: 7px;
+  margin-top: 5px;
+}
+
+.coins-div.has-coins {
+  margin-left: 15px;
+  margin-right: 15px;
+}
 .btn {
-  /* background-color: #007bff; */
   color: white;
   border: none;
   padding: 10px 20px;
@@ -124,18 +185,21 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin-top: 30px;
+  margin-top: 15px;
+  margin-bottom: 10px;
 }
-
-/* .btn:hover {
-  background-color: rgba(0, 0, 0, 0.8);
-} */
 
 .btn--hit {
   background-color: rgb(0, 123, 255);
 }
 .btn--hit:hover {
   background-color: rgb(0, 123, 255, 0.8);
+}
+.add-more-coins {
+  padding: 5px 10px;
+  margin: 5px;
+  background-color: #ff0019;
+  opacity: 1;
 }
 
 .btn--stick {
@@ -150,6 +214,33 @@ body {
 }
 .btn--new:hover {
   background-color: rgb(255, 193, 7, 0.8);
+}
+
+.btn-add-coins {
+  background-color: rgb(199, 23, 206);
+}
+.btn-add-coins:hover {
+  background-color: rgb(199, 23, 206, 0.8);
+}
+
+.btn-all-in {
+  background-color: rgb(0, 173, 173);
+  border-radius: 25px;
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+.btn-all-in:hover {
+  background-color: rgb(0, 173, 173, 0.8);
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.btn:disabled:hover {
+  background-color: inherit;
+  color: inherit;
 }
 
 .cards {
@@ -168,16 +259,18 @@ body {
   padding: 5px;
 }
 
+.player--active {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.draw {
+  background-color: rgb(255, 193, 7);
+}
 .win {
   background-color: #28a745;
 }
 
 .lose {
   background-color: #dc3545;
-}
-
-.player--active {
-  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .hidden {
@@ -303,4 +396,108 @@ body {
 
 .tabs:has(:focus-visible)::after {
   outline-color: red;
+}
+.modal-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: inherit; /* Inherit background from the overlay */
+  backdrop-filter: blur(200px);
+  z-index: 1;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.addCoinsModal {
+  position: relative;
+  background-color: rgb(4, 71, 0);
+  border: 40px;
+  border: 3px solid rgb(255, 193, 7);
+  width: 370px;
+  border-radius: 30px;
+  height: auto;
+  z-index: 3;
+}
+.modal-title-div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.modal-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal-btn-cont {
+  margin-top: 35px;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 0 0 27px 27px;
+  overflow: hidden;
+}
+
+.amount-suggestions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+}
+.btn-addCoins {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 40px;
+  color: white;
+  background-color: #c300cd;
+  border: none;
+  margin: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.modal-add-img {
+  width: 15px;
+}
+
+.player-switcher-div {
+  width: 200px;
+  height: 50px;
+}
+
+.modal-title {
+  margin-bottom: 15px;
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-thickness: 4px;
+  text-underline-offset: 10px;
+}
+
+.modal-close-Btn {
+  cursor: pointer;
+  background: none;
+  border: none;
+  position: absolute;
+  left: 89%;
+  top: 5%;
+  font-size: larger;
+}
+.modal-close-Btn:hover {
+  opacity: 60%;
 }

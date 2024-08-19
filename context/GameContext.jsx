@@ -1,171 +1,236 @@
-import { createContext, useContext, useEffect, useReducer } from 'react';
-import randomNumber from '../helpers/randomNumber';
+import { createContext, useContext, useReducer } from 'react';
+import randomCard from '../helpers/randomCard';
+import determineCurrentPlayer from '../helpers/determineCurrentPlayer';
+import getCardIndex from '../helpers/getCardIndex';
+import getNextPlayer from '../helpers/getNextPlayer';
+import useGameLogic from '../hooks/useGameLogic';
+import updatePlayerState from '../helpers/updatePlayerState';
+import INITIAL_STATE from '../config/initialState';
+import palyerReturnedStake from '../helpers/playerReturnedStake';
+import calcActivePlayer from '../helpers/calcActivePlayer';
 
 const GameContext = createContext();
-
-const initialState = {
-  playerOne: {
-    current: 0,
-    total: 0,
-    cardsInHand: ['0_1', '0_1'],
-    won: false,
-    lost: false
-  },
-  playerTwo: {
-    current: 0,
-    total: 0,
-    cardsInHand: ['0_1', '0_1'],
-    won: false,
-    lost: false
-  },
-  dealer: {
-    current: 0,
-    cardsInHand: ['0_1', '0_1'],
-    lost: false,
-    won: false
-  },
-  activePlayer: 1,
-  numberOfPlayers: 1,
-
-  error: ''
-};
-
-function updatePlayerState(player, action, cardIndex = null) {
-  const newCurrent = player.current + action.payload.value;
-  let newCardsinHand = [...player.cardsInHand];
-
-  if (cardIndex !== null) {
-    newCardsinHand[cardIndex] = action.payload.card;
-  } else {
-    newCardsinHand.push(action.payload.card);
-  }
-
-  return {
-    ...player,
-    current: newCurrent,
-    cardsInHand: newCardsinHand
-  };
-}
 
 function reducer(state, action) {
   switch (action.type) {
     case 'newGame':
       return {
-        ...state,
+        ...INITIAL_STATE,
         playerOne: {
-          ...state.playerOne,
-          current: 0,
-          cardsInHand: ['0_1', '0_1'],
-          won: false,
-          lost: false
+          ...INITIAL_STATE.playerOne,
+          total: state.playerOne.total,
+          coins: palyerReturnedStake(
+            state.playerOne.coins,
+            state.playerOne.currentBet,
+            state.inPlay
+          )
         },
         playerTwo: {
-          ...state.playerTwo,
-          current: 0,
-          cardsInHand: ['0_1', '0_1'],
-          won: false,
-          lost: false
+          ...INITIAL_STATE.playerTwo,
+          total: state.playerTwo.total,
+          coins: palyerReturnedStake(
+            state.playerTwo.coins,
+            state.playerTwo.currentBet,
+            state.inPlay
+          )
         },
-        dealer: {
-          current: 0,
-          cardsInHand: ['0_1', '0_1'],
-          won: false,
-          lost: false
-        },
-        activePlayer: 1
+        activePlayer: calcActivePlayer(
+          state.playerOne.coins,
+          state.playerTwo.coins
+        ),
+        numberOfPlayers: state.numberOfPlayers
       };
 
     case 'addCard': {
       const { player, cardIndex } = action.payload;
       return {
         ...state,
-        [player]: updatePlayerState(state[player], action, cardIndex)
+        [player]: updatePlayerState(state[player], action, cardIndex),
+        inPlay: true
       };
     }
-
-    case 'playerOneTotal':
-      return { ...state, playerOne: { playerOneTotal: action.payload } };
-
-    case 'playerTwoTotal':
-      return { ...state, playerTwo: { playerTwoTotal: action.payload } };
 
     case 'playerLost': {
-      const { player, nextPlayer } = action.payload;
-
-      return {
-        ...state,
-        [player]: { ...state[player], lost: true },
-        activePlayer: nextPlayer
-      };
+      const player = action.payload;
+      let nextPlayer = getNextPlayer(
+        state.numberOfPlayers,
+        state.activePlayer,
+        state.playerOne,
+        state.playerTwo
+      );
+      const dealerLost = player === 'dealer';
+      if (dealerLost) {
+        return {
+          ...state,
+          ['dealer']: { ...state['dealer'], lost: true },
+          activePlayer: 0
+        };
+      } else {
+        return {
+          ...state,
+          [player]: { ...state[player], lost: true, currentBet: 0 },
+          activePlayer: nextPlayer
+        };
+      }
     }
 
-    case 'playerWon': {
+    case 'playerDraw': {
       const player = action.payload;
 
       return {
         ...state,
         [player]: {
           ...state[player],
-          won: true,
-          total: state[player].total + 1
+          draw: true,
+          coins: state[player].coins + state[player].currentBet,
+          currentBet: 0
         },
-        activePlayer: 0
+        ['dealer']: {
+          ...state['dealer'],
+          draw: true
+        }
       };
     }
 
-    case 'stick': {
-      return { ...state, activePlayer: action.payload };
+    case 'playerWon': {
+      const player = action.payload;
+      const addToTotal = player === 'dealer' ? 0 : 1;
+      const dealerWon = player === 'dealer';
+
+      if (dealerWon) {
+        return {
+          ...state,
+          [player]: {
+            ...state[player],
+            won: true,
+            draw: false,
+            total: state[player].total + addToTotal
+          },
+          ['playerOne']: {
+            ...state['playerOne'],
+            draw: false,
+            won: false
+          },
+          ['playerTwo']: {
+            ...state['playerTwo'],
+            draw: false,
+            won: false
+          },
+          activePlayer: 0
+        };
+      } else {
+        return {
+          ...state,
+          [player]: {
+            ...state[player],
+            won: true,
+            draw: false,
+            total: state[player].total + addToTotal,
+            coins: state[player].coins + state[player].currentBet * 2,
+            currentBet: 0
+          },
+          activePlayer: 0
+        };
+      }
     }
 
-    case 'dealerHit':
-      return { ...state, dealerCurrent: action.payload };
+    case 'stick': {
+      return {
+        ...state,
+        activePlayer: action.payload
+      };
+    }
+
     case 'changeNumberOfPlayers':
       return { ...state, numberOfPlayers: action.payload };
 
+    case 'addStake': {
+      const player = action.payload;
+
+      if (state[player].coins === 0) return { ...state };
+      return {
+        ...state,
+        [player]: {
+          ...state[player],
+          coins: state[player].coins - 10,
+          currentBet: state[player].currentBet + 10
+        }
+      };
+    }
+    case 'minusStake': {
+      const player = action.payload;
+
+      if (state[player].currentBet === 0) return { ...state };
+      return {
+        ...state,
+        [player]: {
+          ...state[player],
+          coins: state[player].coins + 10,
+          currentBet: state[player].currentBet - 10
+        }
+      };
+    }
+    case 'allIn': {
+      const player = action.payload;
+      return {
+        ...state,
+        [player]: {
+          ...state[player],
+          currentBet: state[player].currentBet + state[player].coins,
+          coins: 0
+        }
+      };
+    }
+    case 'openCloseModal': {
+      return {
+        ...state,
+        addCoinsModalOpen: !state.addCoinsModalOpen
+      };
+    }
+    case 'addCoins': {
+      const player = action.payload.player;
+      return {
+        ...state,
+        [player]: {
+          ...state[player],
+          coins: state[player].coins + action.payload.amount
+        },
+        activePlayer: calcActivePlayer(
+          state.playerOne.coins,
+          state.playerTwo.coins
+        )
+      };
+    }
+
     default:
-      throw new Error('Unknown action');
+      console.error(action.type, action.payload);
   }
 }
 
 const GameProvider = ({ children }) => {
-  const [
-    { playerOne, playerTwo, dealer, error, activePlayer, numberOfPlayers },
-    dispatch
-  ] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const {
+    playerOne,
+    playerTwo,
+    dealer,
+    error,
+    activePlayer,
+    numberOfPlayers,
+    inPlay,
+    addCoinsModalOpen
+  } = state;
 
-  function handleNumberOfPlayers(e) {
-    dispatch({ type: 'changeNumberOfPlayers', payload: +e.target.value });
+  useGameLogic(state, dispatch, handleHit);
+
+  function handleNumberOfPlayers(playerNumber) {
+    dispatch({ type: 'changeNumberOfPlayers', payload: playerNumber });
   }
 
   function handleHit() {
-    let cardValue = randomNumber(13);
-    const cardSuit = randomNumber(4);
-    const card = `${cardValue}_${cardSuit}`;
-    if (cardValue > 10) cardValue = 10;
+    let currentPlayer = determineCurrentPlayer(activePlayer);
+    const [cardValue, card] = randomCard();
 
-    let currentPlayer;
-
-    if (+activePlayer === 1) currentPlayer = 'playerOne';
-    if (+activePlayer === 2) currentPlayer = 'playerTwo';
-    if (+activePlayer === 3) currentPlayer = 'dealer';
-
-    let cardsArr;
-
-    if (currentPlayer === 'playerOne') cardsArr = playerOne.cardsInHand;
-    if (currentPlayer === 'playerTwo') cardsArr = playerTwo.cardsInHand;
-    if (currentPlayer === 'dealer') cardsArr = dealer.cardsInHand;
-
-    let cardIndex = null;
-
-    let player;
-    if (currentPlayer === 'playerOne') player = playerOne;
-    if (currentPlayer === 'playerTwo') player = playerTwo;
-    if (currentPlayer === 'dealer') player = dealer;
-
-    if (player.current >= 21) return;
-
-    if (cardsArr[0] === '0_1') cardIndex = 0;
-    else if (cardsArr[1] === '0_1') cardIndex = 1;
+    let cardIndex = getCardIndex(state[currentPlayer].cardsInHand);
 
     dispatch({
       type: 'addCard',
@@ -174,12 +239,12 @@ const GameProvider = ({ children }) => {
   }
 
   function handleStick() {
-    let nextPlayer;
-
-    if (numberOfPlayers === 1 && activePlayer === 1) nextPlayer = 3;
-    if (numberOfPlayers === 2 && activePlayer === 1) nextPlayer = 2;
-    if (numberOfPlayers === 2 && activePlayer === 2) nextPlayer = 3;
-
+    let nextPlayer = getNextPlayer(
+      numberOfPlayers,
+      activePlayer,
+      playerOne,
+      playerTwo
+    );
     dispatch({ type: 'stick', payload: nextPlayer });
   }
 
@@ -187,76 +252,26 @@ const GameProvider = ({ children }) => {
     dispatch({ type: 'newGame' });
   }
 
-  useEffect(() => {
-    const currentPlayer =
-      +activePlayer === 1
-        ? playerOne
-        : +activePlayer === 2
-        ? playerTwo
-        : dealer;
+  function handleStake(e, playerNumber) {
+    const player = determineCurrentPlayer(playerNumber);
+    const plusMinus = e.target.value === '+' ? 'addStake' : 'minusStake';
 
-    if (currentPlayer.lost) return;
+    dispatch({ type: plusMinus, payload: player });
+  }
 
-    const currentPlayerScore = currentPlayer.current;
+  function handleAllIn(playerNumber) {
+    const player = determineCurrentPlayer(playerNumber);
+    dispatch({ type: 'allIn', payload: player });
+  }
 
-    const player =
-      +activePlayer === 1
-        ? 'playerOne'
-        : +activePlayer === 2
-        ? 'playerTwo'
-        : 'dealer';
+  function handleOpenCloseAddCoinsModal() {
+    dispatch({ type: 'openCloseModal' });
+  }
 
-    if (numberOfPlayers === 1 && currentPlayer.current > 21)
-      dispatch({ type: 'playerLost', payload: { player, nextPlayer: 0 } });
-
-    if (numberOfPlayers === 2 && currentPlayer.current > 21) {
-      if (+activePlayer === 2 && !playerOne.lost) {
-        dispatch({ type: 'playerLost', payload: { player, nextPlayer: 3 } });
-      } else {
-        dispatch({ type: 'playerLost', payload: { player, nextPlayer: 0 } });
-      }
-    }
-
-    if (currentPlayerScore > 21)
-      dispatch({ type: 'playerLost', payload: { player } });
-
-    if (!dealer.lost && dealer.current > playerOne.current)
-      dispatch({ type: 'playerLost', payload: 'playerOne' });
-    if (!dealer.lost && dealer.current > playerTwo.current)
-      dispatch({ type: 'playerLost', payload: 'playerTwo' });
-  }, [activePlayer, playerOne, playerTwo, dealer, numberOfPlayers]);
-
-  useEffect(() => {
-    if (activePlayer !== 3) return;
-
-    const dealerShouldHit =
-      dealer.current < 17 || dealer.current < playerOne.current;
-
-    if (dealerShouldHit) {
-      const hitTimeout = setTimeout(() => {
-        handleHit();
-      }, 1000);
-      return () => clearTimeout(hitTimeout);
-    } else {
-      dispatch({ type: 'playerWon', payload: 'dealer' });
-    }
-  }, [dealer.current, activePlayer, playerOne.current, handleHit, dispatch]);
-
-  useEffect(() => {
-    if (numberOfPlayers === 1 && dealer.lost)
-      return dispatch({ type: 'playerWon', payload: 'playerOne' });
-
-    if (numberOfPlayers === 2) {
-      if (playerOne.lost && dealer.lost)
-        return dispatch({ type: 'playerWon', payload: 'playerTwo' });
-      if (playerTwo.lost && dealer.lost)
-        dispatch({ type: 'playerWon', payload: 'playerOne' });
-      if (dealer.lost) {
-        dispatch({ type: 'playerWon', payload: 'playerOne' });
-        dispatch({ type: 'playerWon', payload: 'playerTwo' });
-      }
-    }
-  }, [playerOne.lost, playerTwo.lost, dealer.lost, numberOfPlayers]);
+  function handleAddCoins(playerNumber, amount) {
+    const player = determineCurrentPlayer(playerNumber);
+    dispatch({ type: 'addCoins', payload: { player, amount } });
+  }
 
   return (
     <GameContext.Provider
@@ -267,10 +282,16 @@ const GameProvider = ({ children }) => {
         error,
         activePlayer,
         numberOfPlayers,
+        inPlay,
+        addCoinsModalOpen,
         handleNumberOfPlayers,
         handleNewGame,
         handleHit,
-        handleStick
+        handleStick,
+        handleStake,
+        handleAllIn,
+        handleOpenCloseAddCoinsModal,
+        handleAddCoins
       }}
     >
       {children}

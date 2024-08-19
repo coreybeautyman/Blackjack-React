@@ -5,14 +5,14 @@ function Dealer() {
   const { activePlayer, dealer } = useGame();
   const dealerActive = +activePlayer === 3;
 
-  const { current, cardsInHand, lost, won } = dealer;
+  const { current, cardsInHand, lost, won, draw } = dealer;
 
   return (
     <div className='dealer-cont'>
       <div
         className={`dealer ${dealerActive && 'player--active'} ${
-          lost === true ? 'lose' : ''
-        } ${won === true ? 'win' : ''}`}
+          lost ? 'lose' : ''
+        } ${won ? 'win' : ''} ${draw ? 'draw' : ''}`}
       >
         <div className='dealer-cards'>
           {cardsInHand.map((card, i) => {
