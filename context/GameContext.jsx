@@ -36,7 +36,8 @@ function reducer(state, action) {
         },
         activePlayer: calcActivePlayer(
           state.playerOne.coins,
-          state.playerTwo.coins
+          state.playerTwo.coins,
+          state.numberOfPlayers
         ),
         numberOfPlayers: state.numberOfPlayers
       };
@@ -142,7 +143,15 @@ function reducer(state, action) {
     }
 
     case 'changeNumberOfPlayers':
-      return { ...state, numberOfPlayers: action.payload };
+      return {
+        ...state,
+        numberOfPlayers: action.payload,
+        activePlayer: calcActivePlayer(
+          state.playerOne.coins,
+          state.playerTwo.coins,
+          action.payload
+        )
+      };
 
     case 'addStake': {
       const player = action.payload;
@@ -197,7 +206,8 @@ function reducer(state, action) {
         },
         activePlayer: calcActivePlayer(
           state.playerOne.coins,
-          state.playerTwo.coins
+          state.playerTwo.coins,
+          state.numberOfPlayers
         )
       };
     }

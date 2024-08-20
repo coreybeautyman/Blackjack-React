@@ -1,4 +1,5 @@
 import { TextField } from '@mui/material';
+import btnCoin from '../src/assets/coins/btn-coin.png';
 
 function CoinsInputAmount({ value, setValue }) {
   const handleBlur = () => {
@@ -11,15 +12,15 @@ function CoinsInputAmount({ value, setValue }) {
       <div className='amount-suggestions'>
         <button onClick={() => setValue(value + 10)} className='btn-addCoins'>
           10
-          <img className='modal-add-img' src='assets/coins/btn-coin.png'></img>
+          <img className='modal-add-img' src={btnCoin}></img>
         </button>
         <button onClick={() => setValue(value + 50)} className='btn-addCoins'>
           50
-          <img className='modal-add-img' src='assets/coins/btn-coin.png'></img>
+          <img className='modal-add-img' src={btnCoin}></img>
         </button>
         <button onClick={() => setValue(value + 100)} className='btn-addCoins'>
           100
-          <img className='modal-add-img' src='assets/coins/btn-coin.png'></img>
+          <img className='modal-add-img' src={btnCoin}></img>
         </button>
       </div>
       <div className='input-amount'></div>

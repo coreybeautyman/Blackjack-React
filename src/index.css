@@ -6,11 +6,10 @@
 html,
 body {
   min-width: 790px;
-  /* overflow-x: hidden; Prevent horizontal scrolling */
 }
 
 body {
-  background-image: url(assets/background/poker-table-background-green-color_47243-1068.avif);
+  background-image: url(src/assets/background/poker-table-background-green-color_47243-1068.png);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
