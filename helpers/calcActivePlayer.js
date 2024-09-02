@@ -3,7 +3,6 @@ export default function calcActivePlayer(
   playerTwoCoins,
   action
 ) {
-  console.log(action, playerOneCoins, playerTwoCoins);
   if (action === 3) return 3;
   if (action === 2 && playerOneCoins !== 0) return 1;
   if (action === 2 && playerTwoCoins === 0) return 3;
