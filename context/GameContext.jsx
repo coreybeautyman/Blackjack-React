@@ -8,7 +8,7 @@ import updatePlayerState from '../helpers/updatePlayerState';
 import INITIAL_STATE from '../config/initialState';
 import palyerReturnedStake from '../helpers/playerReturnedStake';
 import calcActivePlayer from '../helpers/calcActivePlayer';
-
+import getPlayerAfterCoins from '../helpers/getPlayerAfterAddCoins';
 const GameContext = createContext();
 
 function reducer(state, action) {
@@ -204,11 +204,7 @@ function reducer(state, action) {
           ...state[player],
           coins: state[player].coins + action.payload.amount
         },
-        activePlayer: calcActivePlayer(
-          state.playerOne.coins,
-          state.playerTwo.coins,
-          state.numberOfPlayers
-        )
+        activePlayer: getPlayerAfterCoins(player)
       };
     }
 
@@ -279,6 +275,7 @@ const GameProvider = ({ children }) => {
   }
 
   function handleAddCoins(playerNumber, amount) {
+    if (amount === 0) return;
     const player = determineCurrentPlayer(playerNumber);
     dispatch({ type: 'addCoins', payload: { player, amount } });
   }
