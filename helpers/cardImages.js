@@ -121,4 +121,11 @@ const cardImages = {
   '13_4': card_13_4 // King of Spades
 };
 
+export function preloadCardImages() {
+  Object.values(cardImages).forEach((src) => {
+    const img = new Image();
+    img.src = src;
+  });
+}
+
 export default cardImages;

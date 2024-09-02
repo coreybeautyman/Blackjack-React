@@ -1,9 +1,17 @@
+import { useEffect } from 'react';
 import Controls from '../components/Controls';
 import Dealer from '../components/Dealer';
 import Player from '../components/Player';
 import { GameProvider } from '../context/GameContext';
+import { preloadCardImages } from '../helpers/cardImages';
+import { preloadCoinImages } from '../helpers/coinImages';
 
 function App() {
+  useEffect(() => {
+    preloadCardImages();
+    preloadCoinImages();
+  }, []);
+
   return (
     <GameProvider>
       <div className='app'>

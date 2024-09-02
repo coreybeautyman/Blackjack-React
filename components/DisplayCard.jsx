@@ -1,4 +1,4 @@
-import cardImages from './cardImages';
+import cardImages from '../helpers/cardImages';
 
 function DisplayCard({ card, player }) {
   const playerClass = `card player--card player01-card-1 player01-card`;
